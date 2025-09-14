@@ -39,7 +39,7 @@
     .vignette{position:fixed; inset:0; pointer-events:none; z-index:0; box-shadow:inset 0 0 220px rgba(0,0,0,.4)}
 
     /* Overlay for music start */
-    #overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,.88);backdrop-filter:blur(4px);opacity:1;transition:opacity .3s ease}#overlay.hide{opacity:0;pointer-events:none}#overlay button{padding:14px 26px;font-size:20px;font-weight:700;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(180deg,#9fbbff,#6e8eff);color:#0d1224;box-shadow:var(--ring);}#overlay button:hover{transform:translateY(-1px)}
+    #overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(10,12,20,.88);backdrop-filter:blur(4px);opacity:1;transition:opacity .3s ease}#overlay.hide{opacity:0;pointer-events:none}
     #overlay button{padding:14px 26px;font-size:20px;font-weight:700;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(180deg,#9fbbff,#6e8eff);color:#0d1224;box-shadow:var(--ring);}
     #overlay button:hover{transform:translateY(-1px)}
   </style>
@@ -49,18 +49,16 @@
   <canvas id="snow"></canvas>
   <div class="vignette"></div>
 
-  <!-- Background music -->
+  <!-- Background music with absolute GitHub Pages URL -->
   <audio id="bgm" preload="auto" loop>
-    <source src="sad-sad-piano-music-311697.mp3" type="audio/mpeg">
+    <source src="https://your-username.github.io/your-repo/sad-sad-piano-music-311697.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
   </audio>
 
   <!-- Overlay to start music -->
   <div id="overlay">
     <button id="continueBtn">Continue</button>
   </div>
-
-  <!-- tiny toast for errors/info -->
-  <div id="toast" style="position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font:12px system-ui;padding:8px 10px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:11"></div>
 
   <div class="wrap">
     <header>
@@ -100,32 +98,15 @@
     const overlay = document.getElementById('overlay');
     const continueBtn = document.getElementById('continueBtn');
     const bgm = document.getElementById('bgm');
-    const toast = document.getElementById('toast');
     bgm.volume = 0.25;
 
-    function showToast(msg){ toast.textContent = msg; toast.style.opacity = '1'; clearTimeout(showToast._t); showToast._t = setTimeout(()=>toast.style.opacity='0', 3500); }
-
-    // Helpful diagnostics in console
-    ['loadstart','loadedmetadata','canplaythrough','play','pause','stalled','waiting','suspend','ended','error'].forEach(ev=>{
-      bgm.addEventListener(ev,()=>console.log(`[bgm] ${ev}`, {rs:bgm.readyState, ns:bgm.networkState}));
-    });
-
     continueBtn.addEventListener('click', async ()=>{
-      // Fade overlay regardless; then try to play
-      overlay.classList.add('hide');
       try{
         await bgm.play();
+        overlay.classList.add('hide');
       }catch(e){
-        console.warn('Music play failed', e);
-        // Probe if the file exists (common GitHub Pages issue: wrong path/case)
-        const srcEl = bgm.querySelector('source');
-        const src = srcEl ? srcEl.src : bgm.currentSrc || bgm.src;
-        showToast('Trying to start music…');
-        try{
-          const r = await fetch(src, { method:'HEAD', cache:'no-store' });
-          if(!r.ok){ showToast(`Audio not found (${r.status}). Check file name & path.`); }
-          else { showToast('Browser blocked audio. Interact again (tap/click) to start.'); }
-        }catch(_){ showToast('Could not reach audio file. Check path or host settings.'); }
+        console.error('Music play failed', e);
+        alert('Could not start music. Check the file URL or browser settings.');
       }
     });
 
